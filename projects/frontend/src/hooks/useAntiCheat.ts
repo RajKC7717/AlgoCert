@@ -13,10 +13,16 @@ export const useAntiCheat = (MAX_WARNINGS: number = 3) => {
   const internalClipboard = useRef(""); 
   const lastFrameTime = useRef(Date.now());
   const frameId = useRef<number>(0);
+  const lastStrikeTime = useRef(0); // <--- NEW: To prevent double counting
 
-  // --- HELPER: Trigger a Strike ---
+  // --- HELPER: Trigger a Strike (Debounced) ---
   const triggerWarning = (reason: string) => {
     if (isLocked) return;
+
+    // Prevent double strikes (e.g. Blur + Hidden firing same time)
+    const now = Date.now();
+    if (now - lastStrikeTime.current < 1000) return; 
+    lastStrikeTime.current = now;
     
     setWarnings(prev => {
         const newCount = prev + 1;
@@ -33,14 +39,13 @@ export const useAntiCheat = (MAX_WARNINGS: number = 3) => {
       const now = Date.now();
       const timeDiff = now - lastFrameTime.current;
 
-      // 1. Frame Rate Check (Throttling detection)
-      if (timeDiff > 900) {
+      // 1. Frame Rate Check (Anti-Extension)
+      if (timeDiff > 1200) { // Relaxed slightly to 1.2s to prevent false positives
           triggerWarning("❌ TAB SWITCH DETECTED (System Throttled)");
       }
 
-      // 2. OS Focus Check (The "Always Active" Killer)
+      // 2. OS Focus Check (Strict)
       if (!document.hasFocus()) {
-          // You can uncomment this line for strict OS-level focus checking
           // triggerWarning("❌ WINDOW LOST FOCUS"); 
       }
 
@@ -48,16 +53,17 @@ export const useAntiCheat = (MAX_WARNINGS: number = 3) => {
       frameId.current = requestAnimationFrame(checkSecurity);
     };
 
-    // Start Loop
     frameId.current = requestAnimationFrame(checkSecurity);
 
-    // 3. Event Listeners (Redundant Safety)
+    // 3. Event Listeners
     const handleVisibility = () => {
         if (document.hidden) triggerWarning("❌ TAB HIDDEN");
     };
     
     const handleBlur = () => {
-        triggerWarning("❌ WINDOW UNFOCUSED (Alt-Tab Detected)");
+        // Only trigger blur warning if document is NOT hidden 
+        // (If hidden, visibility event handles it)
+        if (!document.hidden) triggerWarning("❌ WINDOW UNFOCUSED (Alt-Tab)");
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
@@ -69,18 +75,6 @@ export const useAntiCheat = (MAX_WARNINGS: number = 3) => {
       window.removeEventListener("blur", handleBlur);
     };
   }, [warnings, isLocked]);
-
-  // --- LAYER 2: CLIPBOARD WHITELISTING ---
-  useEffect(() => {
-    const handleNativeCopy = () => {
-        const selection = window.getSelection()?.toString();
-        // Ideally, we rely on the editor to set the clipboard, 
-        // but this catches generic page copies.
-    };
-
-    document.addEventListener("copy", handleNativeCopy);
-    return () => document.removeEventListener("copy", handleNativeCopy);
-  }, []);
 
   return {
     warnings,
