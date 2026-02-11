@@ -19,7 +19,7 @@ from algosdk.v2client.models import SimulateTraceConfig
 import algokit_utils
 from algokit_utils import AlgorandClient as _AlgoKitAlgorandClient
 
-_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "incr_counter", "returns": {"type": "uint64"}, "events": [], "readonly": false, "recommendations": {}}], "name": "Counter", "state": {"keys": {"box": {}, "global": {"count": {"key": "Y291bnQ=", "keyType": "AVMString", "valueType": "AVMUint64"}}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 1}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "byteCode": {"approval": "CiACAAEmAQVjb3VudDEYQAADKCJnMRtBACWABDbnKSQ2GgCOAQACIkMxGRREMRhEiAAXFoAEFR98dUxQsCNDMRlA/+MxGBREI0MiKGVEIwgoTGciKGVEiQ==", "clear": "CoEBQw=="}, "compilerInfo": {"compiler": "puya", "compilerVersion": {"major": 4, "minor": 7, "patch": 0}}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBzbWFydF9jb250cmFjdHMuY291bnRlci5jb250cmFjdC5Db3VudGVyLl9fYWxnb3B5X2VudHJ5cG9pbnRfd2l0aF9pbml0KCkgLT4gdWludDY0OgptYWluOgogICAgaW50Y2Jsb2NrIDAgMQogICAgYnl0ZWNibG9jayAiY291bnQiCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICAvLyBzbWFydF9jb250cmFjdHMvY291bnRlci9jb250cmFjdC5weToxMAogICAgLy8gc2VsZi5jb3VudCA9IFVJbnQ2NCgwKQogICAgYnl0ZWNfMCAvLyAiY291bnQiCiAgICBpbnRjXzAgLy8gMAogICAgYXBwX2dsb2JhbF9wdXQKCm1haW5fYWZ0ZXJfaWZfZWxzZUAyOgogICAgLy8gc21hcnRfY29udHJhY3RzL2NvdW50ZXIvY29udHJhY3QucHk6NQogICAgLy8gY2xhc3MgQ291bnRlcihBUkM0Q29udHJhY3QpOgogICAgdHhuIE51bUFwcEFyZ3MKICAgIGJ6IG1haW5fYmFyZV9yb3V0aW5nQDYKICAgIHB1c2hieXRlcyAweDM2ZTcyOTI0IC8vIG1ldGhvZCAiaW5jcl9jb3VudGVyKCl1aW50NjQiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX2luY3JfY291bnRlcl9yb3V0ZUA1CgptYWluX2FmdGVyX2lmX2Vsc2VAODoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9jb3VudGVyL2NvbnRyYWN0LnB5OjUKICAgIC8vIGNsYXNzIENvdW50ZXIoQVJDNENvbnRyYWN0KToKICAgIGludGNfMCAvLyAwCiAgICByZXR1cm4KCm1haW5faW5jcl9jb3VudGVyX3JvdXRlQDU6CiAgICAvLyBzbWFydF9jb250cmFjdHMvY291bnRlci9jb250cmFjdC5weToxNgogICAgLy8gQGFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIGNhbGxzdWIgaW5jcl9jb3VudGVyCiAgICBpdG9iCiAgICBwdXNoYnl0ZXMgMHgxNTFmN2M3NQogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGludGNfMSAvLyAxCiAgICByZXR1cm4KCm1haW5fYmFyZV9yb3V0aW5nQDY6CiAgICAvLyBzbWFydF9jb250cmFjdHMvY291bnRlci9jb250cmFjdC5weTo1CiAgICAvLyBjbGFzcyBDb3VudGVyKEFSQzRDb250cmFjdCk6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDgKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBpbnRjXzEgLy8gMQogICAgcmV0dXJuCgoKLy8gc21hcnRfY29udHJhY3RzLmNvdW50ZXIuY29udHJhY3QuQ291bnRlci5pbmNyX2NvdW50ZXIoKSAtPiB1aW50NjQ6CmluY3JfY291bnRlcjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9jb3VudGVyL2NvbnRyYWN0LnB5OjE4CiAgICAvLyBzZWxmLmNvdW50ICs9IFVJbnQ2NCgxKQogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzAgLy8gImNvdW50IgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLmNvdW50IGV4aXN0cwogICAgaW50Y18xIC8vIDEKICAgICsKICAgIGJ5dGVjXzAgLy8gImNvdW50IgogICAgc3dhcAogICAgYXBwX2dsb2JhbF9wdXQKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy9jb3VudGVyL2NvbnRyYWN0LnB5OjE5CiAgICAvLyByZXR1cm4gc2VsZi5jb3VudAogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzAgLy8gImNvdW50IgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGFzc2VydCAvLyBjaGVjayBzZWxmLmNvdW50IGV4aXN0cwogICAgcmV0c3ViCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [44], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [71], "errorMessage": "can only call when creating"}, {"pc": [47], "errorMessage": "can only call when not creating"}, {"pc": [77, 86], "errorMessage": "check self.count exists"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
+_APP_SPEC_JSON = r"""{"arcs": [22, 28], "bareActions": {"call": [], "create": ["NoOp"]}, "methods": [{"actions": {"call": ["NoOp"], "create": []}, "args": [], "name": "hello", "returns": {"type": "string"}, "events": [], "readonly": false, "recommendations": {}}], "name": "TutorEscrow", "state": {"keys": {"box": {}, "global": {}, "local": {}}, "maps": {"box": {}, "global": {}, "local": {}}, "schema": {"global": {"bytes": 0, "ints": 0}, "local": {"bytes": 0, "ints": 0}}}, "structs": {}, "byteCode": {"approval": "CjEbQQAogASrBsGoNhoAjgEAA4EAQzEZFEQxGESACxUffHUABUhlbGxvsIEBQzEZQP/gMRgURIEBQw==", "clear": "CoEBQw=="}, "compilerInfo": {"compiler": "puya", "compilerVersion": {"major": 4, "minor": 7, "patch": 0}}, "events": [], "networks": {}, "source": {"approval": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy90dXRvcl9lc2Nyb3cvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgVHV0b3JFc2Nyb3coQVJDNENvbnRyYWN0KToKICAgIHR4biBOdW1BcHBBcmdzCiAgICBieiBtYWluX2JhcmVfcm91dGluZ0A2CiAgICBwdXNoYnl0ZXMgMHhhYjA2YzFhOCAvLyBtZXRob2QgImhlbGxvKClzdHJpbmciCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX2hlbGxvX3JvdXRlQDMKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxMDoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy90dXRvcl9lc2Nyb3cvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgVHV0b3JFc2Nyb3coQVJDNENvbnRyYWN0KToKICAgIHB1c2hpbnQgMCAvLyAwCiAgICByZXR1cm4KCm1haW5faGVsbG9fcm91dGVAMzoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy90dXRvcl9lc2Nyb3cvY29udHJhY3QucHk6NQogICAgLy8gQGFiaW1ldGhvZCgpCiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQgLy8gT25Db21wbGV0aW9uIGlzIG5vdCBOb09wCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYXNzZXJ0IC8vIGNhbiBvbmx5IGNhbGwgd2hlbiBub3QgY3JlYXRpbmcKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1MDAwNTQ4NjU2YzZjNmYKICAgIGxvZwogICAgcHVzaGludCAxIC8vIDEKICAgIHJldHVybgoKbWFpbl9iYXJlX3JvdXRpbmdANjoKICAgIC8vIHNtYXJ0X2NvbnRyYWN0cy90dXRvcl9lc2Nyb3cvY29udHJhY3QucHk6NAogICAgLy8gY2xhc3MgVHV0b3JFc2Nyb3coQVJDNENvbnRyYWN0KToKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMTAKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAhCiAgICBhc3NlcnQgLy8gY2FuIG9ubHkgY2FsbCB3aGVuIGNyZWF0aW5nCiAgICBwdXNoaW50IDEgLy8gMQogICAgcmV0dXJuCg==", "clear": "I3ByYWdtYSB2ZXJzaW9uIDEwCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyBhbGdvcHkuYXJjNC5BUkM0Q29udHJhY3QuY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMSAvLyAxCiAgICByZXR1cm4K"}, "sourceInfo": {"approval": {"pcOffsetMethod": "none", "sourceInfo": [{"pc": [25], "errorMessage": "OnCompletion is not NoOp"}, {"pc": [54], "errorMessage": "can only call when creating"}, {"pc": [28], "errorMessage": "can only call when not creating"}]}, "clear": {"pcOffsetMethod": "none", "sourceInfo": []}}, "templateVariables": {}}"""
 APP_SPEC = algokit_utils.Arc56Contract.from_json(_APP_SPEC_JSON)
 
 def _parse_abi_args(args: object | None = None) -> list[object] | None:
@@ -64,11 +64,11 @@ def _init_dataclass(cls: type, data: dict) -> object:
             field_values[field.name] = field_value
     return cls(**field_values)
 
-class CounterParams:
+class TutorEscrowParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def incr_counter(
+    def hello(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.AppCallMethodCallParams:
@@ -76,7 +76,7 @@ class CounterParams:
         params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.params.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
-            "method": "incr_counter()uint64",
+            "method": "hello()string",
         }))
 
     def clear_state(
@@ -90,11 +90,11 @@ class CounterParams:
         )
 
 
-class CounterCreateTransactionParams:
+class TutorEscrowCreateTransactionParams:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def incr_counter(
+    def hello(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
     ) -> algokit_utils.BuiltTransactions:
@@ -102,7 +102,7 @@ class CounterCreateTransactionParams:
         params = params or algokit_utils.CommonAppCallParams()
         return self.app_client.create_transaction.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
-            "method": "incr_counter()uint64",
+            "method": "hello()string",
         }))
 
     def clear_state(
@@ -116,23 +116,23 @@ class CounterCreateTransactionParams:
         )
 
 
-class CounterSend:
+class TutorEscrowSend:
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    def incr_counter(
+    def hello(
         self,
         params: algokit_utils.CommonAppCallParams | None = None,
         send_params: algokit_utils.SendParams | None = None
-    ) -> algokit_utils.SendAppTransactionResult[int]:
+    ) -> algokit_utils.SendAppTransactionResult[str]:
     
         params = params or algokit_utils.CommonAppCallParams()
         response = self.app_client.send.call(algokit_utils.AppClientMethodCallParams(**{
             **dataclasses.asdict(params),
-            "method": "incr_counter()uint64",
+            "method": "hello()string",
         }), send_params=send_params)
         parsed_response = response
-        return typing.cast(algokit_utils.SendAppTransactionResult[int], parsed_response)
+        return typing.cast(algokit_utils.SendAppTransactionResult[str], parsed_response)
 
     def clear_state(
         self,
@@ -145,56 +145,14 @@ class CounterSend:
         )
 
 
-class GlobalStateValue(typing.TypedDict):
-    """Shape of global_state state key values"""
-    count: int
-
-class CounterState:
-    """Methods to access state for the current Counter app"""
+class TutorEscrowState:
+    """Methods to access state for the current TutorEscrow app"""
 
     def __init__(self, app_client: algokit_utils.AppClient):
         self.app_client = app_client
 
-    @property
-    def global_state(
-        self
-    ) -> "_GlobalState":
-            """Methods to access global_state for the current app"""
-            return _GlobalState(self.app_client)
-
-class _GlobalState:
-    def __init__(self, app_client: algokit_utils.AppClient):
-        self.app_client = app_client
-        
-        # Pre-generated mapping of value types to their struct classes
-        self._struct_classes: dict[str, typing.Type[typing.Any]] = {}
-
-    def get_all(self) -> GlobalStateValue:
-        """Get all current keyed values from global_state state"""
-        result = self.app_client.state.global_state.get_all()
-        if not result:
-            return typing.cast(GlobalStateValue, {})
-
-        converted = {}
-        for key, value in result.items():
-            key_info = self.app_client.app_spec.state.keys.global_state.get(key)
-            struct_class = self._struct_classes.get(key_info.value_type) if key_info else None
-            converted[key] = (
-                _init_dataclass(struct_class, value) if struct_class and isinstance(value, dict)
-                else value
-            )
-        return typing.cast(GlobalStateValue, converted)
-
-    @property
-    def count(self) -> int:
-        """Get the current value of the count key in global_state state"""
-        value = self.app_client.state.global_state.get_value("count")
-        if isinstance(value, dict) and "AVMUint64" in self._struct_classes:
-            return _init_dataclass(self._struct_classes["AVMUint64"], value)  # type: ignore
-        return typing.cast(int, value)
-
-class CounterClient:
-    """Client for interacting with Counter smart contract"""
+class TutorEscrowClient:
+    """Client for interacting with TutorEscrow smart contract"""
 
     @typing.overload
     def __init__(self, app_client: algokit_utils.AppClient) -> None: ...
@@ -242,10 +200,10 @@ class CounterClient:
         else:
             raise ValueError("Either app_client or algorand and app_id must be provided")
     
-        self.params = CounterParams(self.app_client)
-        self.create_transaction = CounterCreateTransactionParams(self.app_client)
-        self.send = CounterSend(self.app_client)
-        self.state = CounterState(self.app_client)
+        self.params = TutorEscrowParams(self.app_client)
+        self.create_transaction = TutorEscrowCreateTransactionParams(self.app_client)
+        self.send = TutorEscrowSend(self.app_client)
+        self.state = TutorEscrowState(self.app_client)
 
     @staticmethod
     def from_creator_and_name(
@@ -258,8 +216,8 @@ class CounterClient:
         clear_source_map: SourceMap | None = None,
         ignore_cache: bool | None = None,
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
-    ) -> "CounterClient":
-        return CounterClient(
+    ) -> "TutorEscrowClient":
+        return TutorEscrowClient(
             algokit_utils.AppClient.from_creator_and_name(
                 creator_address=creator_address,
                 app_name=app_name,
@@ -282,8 +240,8 @@ class CounterClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "CounterClient":
-        return CounterClient(
+    ) -> "TutorEscrowClient":
+        return TutorEscrowClient(
             algokit_utils.AppClient.from_network(
                 app_spec=APP_SPEC,
                 algorand=algorand,
@@ -322,8 +280,8 @@ class CounterClient:
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> "CounterClient":
-        return CounterClient(
+    ) -> "TutorEscrowClient":
+        return TutorEscrowClient(
             self.app_client.clone(
                 app_name=app_name,
                 default_sender=default_sender,
@@ -333,15 +291,15 @@ class CounterClient:
             )
         )
 
-    def new_group(self) -> "CounterComposer":
-        return CounterComposer(self)
+    def new_group(self) -> "TutorEscrowComposer":
+        return TutorEscrowComposer(self)
 
     @typing.overload
     def decode_return_value(
         self,
-        method: typing.Literal["incr_counter()uint64"],
+        method: typing.Literal["hello()string"],
         return_value: algokit_utils.ABIReturn | None
-    ) -> int | None: ...
+    ) -> str | None: ...
     @typing.overload
     def decode_return_value(
         self,
@@ -353,7 +311,7 @@ class CounterClient:
         self,
         method: str,
         return_value: algokit_utils.ABIReturn | None
-    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None | int:
+    ) -> algokit_utils.ABIValue | algokit_utils.ABIStruct | None | str:
         """Decode ABI return value for the given method."""
         if return_value is None:
             return None
@@ -373,15 +331,15 @@ class CounterClient:
 
 
 @dataclasses.dataclass(frozen=True)
-class CounterBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
-    """Parameters for creating Counter contract with bare calls"""
+class TutorEscrowBareCallCreateParams(algokit_utils.AppClientBareCallCreateParams):
+    """Parameters for creating TutorEscrow contract with bare calls"""
     on_complete: typing.Literal[OnComplete.NoOpOC] | None = None
 
     def to_algokit_utils_params(self) -> algokit_utils.AppClientBareCallCreateParams:
         return algokit_utils.AppClientBareCallCreateParams(**self.__dict__)
 
-class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreateParams, None, None]):
-    """Factory for deploying and managing CounterClient smart contracts"""
+class TutorEscrowFactory(algokit_utils.TypedAppFactoryProtocol[TutorEscrowBareCallCreateParams, None, None]):
+    """Factory for deploying and managing TutorEscrowClient smart contracts"""
 
     def __init__(
         self,
@@ -404,9 +362,9 @@ class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreate
                 compilation_params=compilation_params,
             )
         )
-        self.params = CounterFactoryParams(self.app_factory)
-        self.create_transaction = CounterFactoryCreateTransaction(self.app_factory)
-        self.send = CounterFactorySend(self.app_factory)
+        self.params = TutorEscrowFactoryParams(self.app_factory)
+        self.create_transaction = TutorEscrowFactoryCreateTransaction(self.app_factory)
+        self.send = TutorEscrowFactorySend(self.app_factory)
 
     @property
     def app_name(self) -> str:
@@ -425,7 +383,7 @@ class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreate
         *,
         on_update: algokit_utils.OnUpdate | None = None,
         on_schema_break: algokit_utils.OnSchemaBreak | None = None,
-        create_params: CounterBareCallCreateParams | None = None,
+        create_params: TutorEscrowBareCallCreateParams | None = None,
         update_params: None = None,
         delete_params: None = None,
         existing_deployments: algokit_utils.ApplicationLookup | None = None,
@@ -433,7 +391,7 @@ class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreate
         app_name: str | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
-    ) -> tuple[CounterClient, algokit_utils.AppFactoryDeployResult]:
+    ) -> tuple[TutorEscrowClient, algokit_utils.AppFactoryDeployResult]:
         """Deploy the application"""
         deploy_response = self.app_factory.deploy(
             on_update=on_update,
@@ -448,7 +406,7 @@ class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreate
             send_params=send_params,
         )
 
-        return CounterClient(deploy_response[0]), deploy_response[1]
+        return TutorEscrowClient(deploy_response[0]), deploy_response[1]
 
     def get_app_client_by_creator_and_name(
         self,
@@ -460,9 +418,9 @@ class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreate
         app_lookup_cache: algokit_utils.ApplicationLookup | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> CounterClient:
+    ) -> TutorEscrowClient:
         """Get an app client by creator address and name"""
-        return CounterClient(
+        return TutorEscrowClient(
             self.app_factory.get_app_client_by_creator_and_name(
                 creator_address,
                 app_name,
@@ -483,9 +441,9 @@ class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreate
         default_signer: TransactionSigner | None = None,
         approval_source_map: SourceMap | None = None,
         clear_source_map: SourceMap | None = None,
-    ) -> CounterClient:
+    ) -> TutorEscrowClient:
         """Get an app client by app ID"""
-        return CounterClient(
+        return TutorEscrowClient(
             self.app_factory.get_app_client_by_id(
                 app_id,
                 app_name,
@@ -497,17 +455,17 @@ class CounterFactory(algokit_utils.TypedAppFactoryProtocol[CounterBareCallCreate
         )
 
 
-class CounterFactoryParams:
-    """Parameters for creating transactions for Counter contract"""
+class TutorEscrowFactoryParams:
+    """Parameters for creating transactions for TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = CounterFactoryCreateParams(app_factory)
-        self.update = CounterFactoryUpdateParams(app_factory)
-        self.delete = CounterFactoryDeleteParams(app_factory)
+        self.create = TutorEscrowFactoryCreateParams(app_factory)
+        self.update = TutorEscrowFactoryUpdateParams(app_factory)
+        self.delete = TutorEscrowFactoryDeleteParams(app_factory)
 
-class CounterFactoryCreateParams:
-    """Parameters for 'create' operations of Counter contract"""
+class TutorEscrowFactoryCreateParams:
+    """Parameters for 'create' operations of TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -524,27 +482,27 @@ class CounterFactoryCreateParams:
             algokit_utils.AppFactoryCreateParams(**dataclasses.asdict(params)),
             compilation_params=compilation_params)
 
-    def incr_counter(
+    def hello(
         self,
         *,
         params: algokit_utils.CommonAppCallCreateParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None
     ) -> algokit_utils.AppCreateMethodCallParams:
-        """Creates a new instance using the incr_counter()uint64 ABI method"""
+        """Creates a new instance using the hello()string ABI method"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         return self.app_factory.params.create(
             algokit_utils.AppFactoryCreateMethodCallParams(
                 **{
                 **dataclasses.asdict(params),
-                "method": "incr_counter()uint64",
+                "method": "hello()string",
                 "args": None,
                 }
             ),
             compilation_params=compilation_params
         )
 
-class CounterFactoryUpdateParams:
-    """Parameters for 'update' operations of Counter contract"""
+class TutorEscrowFactoryUpdateParams:
+    """Parameters for 'update' operations of TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -561,8 +519,8 @@ class CounterFactoryUpdateParams:
             algokit_utils.AppClientBareCallParams(**dataclasses.asdict(params)),
             )
 
-class CounterFactoryDeleteParams:
-    """Parameters for 'delete' operations of Counter contract"""
+class TutorEscrowFactoryDeleteParams:
+    """Parameters for 'delete' operations of TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -580,16 +538,16 @@ class CounterFactoryDeleteParams:
             )
 
 
-class CounterFactoryCreateTransaction:
-    """Create transactions for Counter contract"""
+class TutorEscrowFactoryCreateTransaction:
+    """Create transactions for TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = CounterFactoryCreateTransactionCreate(app_factory)
+        self.create = TutorEscrowFactoryCreateTransactionCreate(app_factory)
 
 
-class CounterFactoryCreateTransactionCreate:
-    """Create new instances of Counter contract"""
+class TutorEscrowFactoryCreateTransactionCreate:
+    """Create new instances of TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -605,16 +563,16 @@ class CounterFactoryCreateTransactionCreate:
         )
 
 
-class CounterFactorySend:
-    """Send calls to Counter contract"""
+class TutorEscrowFactorySend:
+    """Send calls to TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
-        self.create = CounterFactorySendCreate(app_factory)
+        self.create = TutorEscrowFactorySendCreate(app_factory)
 
 
-class CounterFactorySendCreate:
-    """Send create calls to Counter contract"""
+class TutorEscrowFactorySendCreate:
+    """Send create calls to TutorEscrow contract"""
 
     def __init__(self, app_factory: algokit_utils.AppFactory):
         self.app_factory = app_factory
@@ -625,7 +583,7 @@ class CounterFactorySendCreate:
         params: algokit_utils.CommonAppCallCreateParams | None = None,
         send_params: algokit_utils.SendParams | None = None,
         compilation_params: algokit_utils.AppClientCompilationParams | None = None,
-    ) -> tuple[CounterClient, algokit_utils.SendAppCreateTransactionResult]:
+    ) -> tuple[TutorEscrowClient, algokit_utils.SendAppCreateTransactionResult]:
         """Creates a new instance using a bare call"""
         params = params or algokit_utils.CommonAppCallCreateParams()
         result = self.app_factory.send.bare.create(
@@ -633,30 +591,30 @@ class CounterFactorySendCreate:
             send_params=send_params,
             compilation_params=compilation_params
         )
-        return CounterClient(result[0]), result[1]
+        return TutorEscrowClient(result[0]), result[1]
 
 
-class CounterComposer:
-    """Composer for creating transaction groups for Counter contract calls"""
+class TutorEscrowComposer:
+    """Composer for creating transaction groups for TutorEscrow contract calls"""
 
-    def __init__(self, client: "CounterClient"):
+    def __init__(self, client: "TutorEscrowClient"):
         self.client = client
         self._composer = client.algorand.new_group()
         self._result_mappers: list[typing.Callable[[algokit_utils.ABIReturn | None], object] | None] = []
 
-    def incr_counter(
+    def hello(
         self,
         params: algokit_utils.CommonAppCallParams | None = None
-    ) -> "CounterComposer":
+    ) -> "TutorEscrowComposer":
         self._composer.add_app_call_method_call(
-            self.client.params.incr_counter(
+            self.client.params.hello(
                 
                 params=params,
             )
         )
         self._result_mappers.append(
             lambda v: self.client.decode_return_value(
-                "incr_counter()uint64", v
+                "hello()string", v
             )
         )
         return self
@@ -666,7 +624,7 @@ class CounterComposer:
         *,
         args: list[bytes] | None = None,
         params: algokit_utils.CommonAppCallParams | None = None,
-    ) -> "CounterComposer":
+    ) -> "TutorEscrowComposer":
         params=params or algokit_utils.CommonAppCallParams()
         self._composer.add_app_call(
             self.client.params.clear_state(
@@ -682,7 +640,7 @@ class CounterComposer:
     
     def add_transaction(
         self, txn: Transaction, signer: TransactionSigner | None = None
-    ) -> "CounterComposer":
+    ) -> "TutorEscrowComposer":
         self._composer.add_transaction(txn, signer)
         return self
     

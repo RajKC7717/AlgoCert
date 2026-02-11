@@ -8,8 +8,9 @@ import MintNFT from './components/MintNFT'
 import CreateASA from './components/CreateASA'
 import AssetOptIn from './components/AssetOptIn'
 import Bank from './components/Bank'
+import DevDuel from './components/DevDuel'
 
-interface HomeProps {}
+interface HomeProps { }
 
 const Home: React.FC<HomeProps> = () => {
   const [openWalletModal, setOpenWalletModal] = useState<boolean>(false)
@@ -19,6 +20,7 @@ const Home: React.FC<HomeProps> = () => {
   const [createAsaModal, setCreateAsaModal] = useState<boolean>(false)
   const [assetOptInModal, setAssetOptInModal] = useState<boolean>(false)
   const [bankModal, setBankModal] = useState<boolean>(false)
+  const [devDuelModal, setDevDuelModal] = useState<boolean>(false)
   const { activeAddress } = useWallet()
 
   const toggleWalletModal = () => {
@@ -49,6 +51,16 @@ const Home: React.FC<HomeProps> = () => {
           <p className="text-gray-700 mb-8 text-center">Algorand operations in one-place.</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="card bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-xl md:col-span-3">
+              <div className="card-body">
+                <h2 className="card-title text-2xl">⚔️ Dev-Duel Arena</h2>
+                <p>Prove your coding skills with keystroke forensics and mint Proof-of-Skill NFTs.</p>
+                <div className="card-actions justify-end">
+                  <button className="btn btn-warning" onClick={() => setDevDuelModal(true)}>Enter Arena</button>
+                </div>
+              </div>
+            </div>
+
             <div className="card bg-gradient-to-br from-sky-500 to-cyan-500 text-white shadow-xl">
               <div className="card-body">
                 <h2 className="card-title">Send Algo</h2>
@@ -126,6 +138,7 @@ const Home: React.FC<HomeProps> = () => {
       <CreateASA openModal={createAsaModal} closeModal={() => setCreateAsaModal(false)} />
       <AssetOptIn openModal={assetOptInModal} closeModal={() => setAssetOptInModal(false)} />
       <Bank openModal={bankModal} closeModal={() => setBankModal(false)} />
+      <DevDuel openModal={devDuelModal} closeModal={() => setDevDuelModal(false)} />
     </div>
   )
 }
