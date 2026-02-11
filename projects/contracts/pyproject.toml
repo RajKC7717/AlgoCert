@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "OnChain-Counter-contracts"
+package-mode = false
 version = "0.1.0"
 description = "Algorand smart contracts"
 authors = ["maroti <vaibhavspatre@gmail.com>"]
