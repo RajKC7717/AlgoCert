@@ -1,337 +1,583 @@
-### Algorand dApp Quick Start Guide (Base Template)
+# Algo-Cert Academy
 
-This guide helps non‑technical founders and developers quickly prototype and test Web3 ideas on Algorand using this starter. You’ll set up the project, customize the UI via safe AI prompts, mint tokens and NFTs, and interact with smart contracts.
-
-- Repo to fork/clone: `https://github.com/marotipatre/Hackseries-2-QuickStart-template` (source)
-- Works with AlgoKit monorepo structure (contracts + React frontend)
-- Includes prebuilt “cards” demonstrating key patterns:
-  - Counter: simple contract interaction
-  - Bank: complex interaction with contract + Indexer
-  - Asset Create: mint fungible tokens (ASAs)
-  - NFT Mint: upload to IPFS and mint ARC NFTs
-  - Payments: send ALGO and ASA (e.g., USDC)
-
-[Base template repo](https://github.com/marotipatre/Hackseries-2-QuickStart-template)
+> **Decentralized Skill Verification Platform**  
+> Secure, tamper-proof on-chain credential issuance powered by Algorand and IPFS.
 
 ---
 
-## 1) Project Setup
+## Table of Contents
 
-Prerequisites:
-- Docker (running)
-- Node.js 18+ and npm
-- AlgoKit installed (see official docs)
+- [Overview](#overview)
+- [System Architecture](#system-architecture)
+- [Key Features](#key-features)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Application](#running-the-application)
+- [Smart Contracts](#smart-contracts)
+- [API Integration](#api-integration)
+- [Security & Anti-Cheat](#security--anti-cheat)
+- [Certificate Generation & Minting](#certificate-generation--minting)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
-Clone or fork the base template:
+---
 
-```bash
-git clone https://github.com/marotipatre/Hackseries-2-QuickStart-template.git
-cd Hackseries-2-QuickStart-template
+## Overview
+
+**Algo-Cert Academy** is a decentralized application (dApp) that bridges secure skill assessment with on-chain credential verification. It combines:
+
+- **Client-Side Code Execution & Grading**: Real-time Python code evaluation against test cases.
+- **AI-Powered Assessment**: Integration with Google Gemini API for intelligent code review and scoring.
+- **Multi-Layer Anti-Cheat System**: Browser APIs (Fullscreen, Visibility State), keystroke dynamics, and session monitoring.
+- **Decentralized Credential Storage**: IPFS via Pinata for immutable certificate metadata and images.
+- **NFT Minting**: Automatic creation of Algorand Standard Assets (ASA) following ARC-3 standards.
+- **Wallet Integration**: Seamless connection via Pera Wallet, Defly, and other Algorand wallets.
+
+Students submit code solutions, receive AI feedback, and upon passing—automatically receive a verifiable digital certificate minted as an NFT on the Algorand blockchain. This proof of skill is portable, verifiable, and permanently recorded.
+
+---
+
+## System Architecture
+
+### High-Level Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React + Vite)                  │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  1. Authentication (Wallet Connect)                    │ │
+│  │  2. Exam Submission (Monaco Editor)                    │ │
+│  │  3. Anti-Cheat Monitors (Fullscreen, Keystroke)       │ │
+│  └────────────────────────────────────────────────────────┘ │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+   ┌────▼─────┐              ┌───────▼────┐
+   │ Gemini   │              │   IPFS     │
+   │ API      │              │  (Pinata)  │
+   │ (Grade)  │              │ (Upload)   │
+   └────┬─────┘              └───────┬────┘
+        │                            │
+        └──────────────┬─────────────┘
+                       │
+        ┌──────────────▼──────────────┐
+        │   Smart Contracts (Python)  │
+        │  ┌──────────────────────┐   │
+        │  │ Counter / Bank / etc │   │
+        │  └──────────────────────┘   │
+        └─────────────┬────────────────┘
+                      │
+        ┌─────────────▼───────────────┐
+        │ Algorand Testnet / Mainnet  │
+        │ (ASA Minting, Transaction)  │
+        └─────────────────────────────┘
 ```
 
-Bootstrap the workspace (installs deps, sets up venv, etc.):
+### Component Breakdown
 
-```bash
-algokit project bootstrap all
+1. **Frontend (React + Vite)**
+   - Entry point: `src/main.tsx`
+   - Main app router: `src/App.tsx`, `src/Home.tsx`
+   - Core exam components: `ExamRoom.tsx`, `DevDuel.tsx`
+   - Wallet integration: `ConnectWallet.tsx`, `Account.tsx`
+
+2. **Exam Engine**
+   - `utils/gradeExam.ts`: Gemini API integration for code grading
+   - `utils/keystrokeAnalyzer.ts`: Keystroke pattern analysis for trust scoring
+   - `hooks/useKeystrokeMonitor.ts`: Real-time keystroke event monitoring
+   - `hooks/useAntiCheat.ts`: Session integrity enforcement
+
+3. **Certificate & Storage**
+   - `utils/generateCertificate.ts`: Canvas-based certificate rendering
+   - `utils/pinata.ts`: IPFS pinning and file upload operations
+   - `utils/nftMetadata.ts`: ARC-3 compliant metadata generation
+
+4. **Smart Contracts** (Python + AlgoKit)
+   - `projects/contracts/smart_contracts/counter/`: Counter contract example
+   - `projects/contracts/smart_contracts/bank/`: Bank contract example
+   - Auto-generated client SDKs in `artifacts/`
+
+5. **Wallet & Transactions**
+   - `utils/payExamFee.ts`: Fee payment transaction
+   - `utils/optIn.ts`: Token opt-in operations
+   - `utils/mintGradeNFT.ts`: ASA creation and minting
+
+---
+
+## Key Features
+
+### 🔐 Multi-Layer Security
+
+| Layer | Mechanism | Purpose |
+|-------|-----------|---------|
+| **Session Integrity** | Fullscreen enforcement | Prevents alt-tab and overlays |
+| **Visibility Monitoring** | Document visibility API | Detects tab switching |
+| **Keystroke Dynamics** | Typing pattern analysis | Flags bot-like speeds (>180 WPM) |
+| **Clipboard Tracking** | Internal vs. external paste detection | Distinguishes legit vs. copied code |
+| **Network Monitoring** | Browser blur/focus events | Detects extension popups |
+
+### 🎯 Intelligent Grading
+
+- **Gemini AI Integration**: Real-time code evaluation with reasoning
+- **Configurable Models**: Support for `gemini-1.5`, `gemini-2.0-flash`, etc.
+- **Robust JSON Parsing**: Handles markdown-wrapped and malformed responses
+- **Graceful Fallback**: Simulated grading if API quota exceeded
+
+### ✨ Certificate Generation
+
+- **Canvas Rendering**: Ornate, high-resolution certificate design
+- **Dynamic Data**: Student name, score, date, and trust metrics embedded
+- **Dual Output**: Preview URL (fast) + File object (for IPFS upload)
+
+### 🔗 Blockchain Integration
+
+- **ARC-3 Metadata Standard**: Fully compliant NFT metadata
+- **IPFS Storage**: Immutable certificate images and metadata via Pinata
+- **One-Click Minting**: ASA creation and transfer in a single transaction
+- **Multi-Wallet Support**: Pera, Defly, Lute, and others
+
+---
+
+## Technology Stack
+
+### Frontend
+- **Framework**: React 18.2 + TypeScript
+- **Build Tool**: Vite 5.0
+- **Styling**: Tailwind CSS + DaisyUI
+- **Editor**: Monaco Editor (VS Code compatible)
+- **State Management**: React Hooks + Context API
+
+### Blockchain
+- **Network**: Algorand (Testnet/Mainnet)
+- **SDK**: algosdk 3.x + algokit-utils 9.x
+- **Smart Contracts**: PyTeal (Python-based)
+- **Storage**: IPFS (Pinata API)
+
+### AI & Services
+- **Code Grading**: Google Gemini API
+- **Clipboard Detection**: Clipboard API
+- **Canvas Rendering**: HTML5 Canvas API
+
+### Tooling
+- **Package Manager**: NPM 9+
+- **Node.js**: 20+
+- **Testing**: Jest, Playwright
+- **Linting**: ESLint + Prettier
+- **Build**: TypeScript, Vite, Tailwind PostCSS
+
+---
+
+## Project Structure
+
+```
+Hackathon-QuickStart-template/
+├── projects/
+│   ├── frontend/                          # React + Vite frontend
+│   │   ├── public/                        # Static assets
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   │   ├── ExamRoom.tsx           # Main exam interface
+│   │   │   │   ├── DevDuel.tsx            # Competitive exam mode
+│   │   │   │   ├── ConnectWallet.tsx      # Wallet authentication
+│   │   │   │   ├── Account.tsx            # User account display
+│   │   │   │   ├── Bank.tsx               # Bank contract UI
+│   │   │   │   ├── Counter.tsx            # Counter contract UI
+│   │   │   │   └── ...
+│   │   │   ├── hooks/
+│   │   │   │   ├── useKeystrokeMonitor.ts # Keystroke tracking
+│   │   │   │   ├── useAntiCheat.ts        # Anti-cheat enforcement
+│   │   │   │   └── ...
+│   │   │   ├── utils/
+│   │   │   │   ├── gradeExam.ts           # Gemini API integration
+│   │   │   │   ├── generateCertificate.ts # Canvas certificate rendering
+│   │   │   │   ├── pinata.ts              # IPFS pinning
+│   │   │   │   ├── keystrokeAnalyzer.ts   # Keystroke analysis
+│   │   │   │   ├── mintGradeNFT.ts        # NFT minting logic
+│   │   │   │   ├── optIn.ts               # Token opt-in
+│   │   │   │   ├── nftMetadata.ts         # ARC-3 metadata
+│   │   │   │   └── network/
+│   │   │   │       └── getAlgoClientConfigs.ts
+│   │   │   ├── interfaces/
+│   │   │   │   └── network.ts             # Type definitions
+│   │   │   ├── styles/
+│   │   │   │   └── main.css               # Global styles
+│   │   │   ├── App.tsx                    # Main app router
+│   │   │   ├── main.tsx                   # React entry point
+│   │   │   └── vite-env.d.ts              # Vite type definitions
+│   │   ├── .env.example                   # Environment variables template
+│   │   ├── vite.config.ts                 # Vite configuration
+│   │   ├── tsconfig.json                  # TypeScript configuration
+│   │   ├── tailwind.config.cjs            # Tailwind config
+│   │   └── package.json
+│   │
+│   └── contracts/                         # Python smart contracts
+│       ├── smart_contracts/
+│       │   ├── counter/
+│       │   │   ├── contract.py            # Counter contract
+│       │   │   └── deploy_config.py
+│       │   ├── bank/
+│       │   │   ├── contract.py            # Bank contract
+│       │   │   └── deploy_config.py
+│       │   ├── team_vault/
+│       │   ├── tutor_escrow/
+│       │   └── artifacts/                 # Generated client SDKs
+│       ├── tests/
+│       │   ├── counter_test.py
+│       │   └── counter_client_test.py
+│       ├── pyproject.toml
+│       └── poetry.toml
+│
+├── .algokit/
+├── .algokit.toml                          # AlgoKit config
+├── Alokit_setup.md                        # Setup guide
+├── OnChain-Counter.code-workspace         # VS Code workspace
+├── package.json                           # Root package.json
+└── README.md                              # This file
 ```
 
-Build all projects:
+---
+
+## Prerequisites
+
+- **Node.js**: v20+ ([download](https://nodejs.org/))
+- **npm**: v9+ (included with Node.js)
+- **Python**: 3.11+ (for smart contracts)
+- **AlgoKit**: Latest ([install](https://github.com/algorandfoundation/algokit-cli))
+- **Algorand Wallet**: Pera or Defly wallet with testnet ALGO tokens
+- **Google Gemini API Key**: Free tier available ([get key](https://ai.google.dev/))
+- **Pinata API Key**: For IPFS uploads ([get key](https://pinata.cloud/))
+
+---
+
+## Installation
+
+### 1. Clone the Repository
 
 ```bash
-algokit project run build
+git clone <repository-url>
+cd Hackathon-QuickStart-template
 ```
 
-Run the frontend:
+### 2. Install Root Dependencies
+
+```bash
+npm install
+```
+
+### 3. Install Frontend Dependencies
 
 ```bash
 cd projects/frontend
 npm install
-npm run dev
 ```
 
-Optional: alternative starter to compare or borrow patterns from:
+### 4. Install Smart Contract Dependencies (Optional)
 
 ```bash
-git clone https://github.com/Ganainmtech/Algorand-dApp-Quick-Start-Template-TypeScript.git
+cd ../../projects/contracts
+poetry install
 ```
 
-References:
-- Algorand Developer Portal: `https://dev.algorand.co/`
-- AlgoKit Workshops: `https://algorand.co/algokit-workshops`
-- Algodevs YouTube: `https://www.youtube.com/@algodevs`
+Or using pip:
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## 2) Required environment variables (Frontend)
+## Configuration
 
-Create `projects/frontend/.env` with the following values for TestNet (adjust as needed):
+### Frontend Environment Variables
 
-```bash
-# Network (Algod)
+Create a `.env` file in `projects/frontend/`:
+
+```env
+# Algorand Network
 VITE_ALGOD_SERVER=https://testnet-api.algonode.cloud
-VITE_ALGOD_PORT=
+VITE_ALGOD_PORT=443
 VITE_ALGOD_TOKEN=
-VITE_ALGOD_NETWORK=testnet
-
-# Indexer (for Bank/indexed reads)
 VITE_INDEXER_SERVER=https://testnet-idx.algonode.cloud
-VITE_INDEXER_PORT=
+VITE_INDEXER_PORT=443
 VITE_INDEXER_TOKEN=
 
-# Optional: KMD (if using a local KMD wallet)
-VITE_KMD_SERVER=http://localhost
-VITE_KMD_PORT=4002
-VITE_KMD_TOKEN=a-super-secret-token
-VITE_KMD_WALLET=unencrypted-default-wallet
-VITE_KMD_PASSWORD=some-password
+# AI Grading
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_GEMINI_MODEL=gemini-1.5
 
-# Pinata (NFT media + metadata to IPFS)
-# Generate a JWT in Pinata and paste below
-VITE_PINATA_JWT=eyJhbGciOi...  # JWT from Pinata
-# Optional: custom gateway
-VITE_PINATA_GATEWAY=https://gateway.pinata.cloud/ipfs
+# Student Info (Optional)
+VITE_STUDENT_NAME="Your Name Here"
+
+# IPFS / Pinata Storage
+VITE_PINATA_JWT=your_pinata_jwt_here
+
+# Network Environment
+VITE_NETWORK=testnet
 ```
 
-Notes:
-- Algod/Indexer config is read by `src/utils/network/getAlgoClientConfigs.ts`:
-  - `VITE_ALGOD_SERVER`, `VITE_ALGOD_PORT`, `VITE_ALGOD_TOKEN`, `VITE_ALGOD_NETWORK`
-  - `VITE_INDEXER_SERVER`, `VITE_INDEXER_PORT`, `VITE_INDEXER_TOKEN`
-- Pinata integration expects `VITE_PINATA_JWT` and optional `VITE_PINATA_GATEWAY` for NFT uploads (see `src/utils/pinata.ts`).
-- Restart the dev server after editing `.env`.
+### AlgoKit Configuration
 
-Pinata API keys/JWT: create via Pinata dashboard `https://app.pinata.cloud/developers/api-keys` and use the generated JWT.
+Verify `.algokit.toml`:
 
----
-
-## 3) Project map (what to tweak)
-
-Frontend location: `projects/frontend`
-
-Key files:
-- `src/Home.tsx` — Landing page
-- `src/components/Transact.tsx` — Payments (ALGO, template for ASA)
-- `src/components/Bank.tsx` — Contract + Indexer demo (deploy, deposit, withdraw, statements, depositors)
-- `src/components/CreateASA.tsx` — Create fungible tokens (ASA)
-- `src/components/MintNFT.tsx` — Mint NFTs with IPFS media/metadata
-- `src/components/AppCalls.tsx` — Example app call wiring to a contract
-- `src/utils/pinata.ts` — Pinata IPFS utilities (file/JSON pin)
-- `src/utils/network/getAlgoClientConfigs.ts` — Network configs from Vite env
-
-Contracts (generated artifacts, clients):
-- `projects/contracts/smart_contracts/**` and `projects/frontend/src/contracts/**`
-
----
-
-## 4) Use AI to redesign UI safely (keep logic intact)
-
-How to work:
-1) Open the target file and copy its full contents.
-2) Paste into your AI tool (ChatGPT/Claude/Gemini).
-3) Use the corresponding prompt below to redesign using TailwindCSS.
-4) Replace only JSX/markup/styles. Do NOT change logic, imports, props, state, handlers, or function calls.
-
-### 4.1 Home (Landing Page)
-
-File: `projects/frontend/src/Home.tsx`
-
-Prompt:
-```
-I'm building an Algorand dApp and want to improve the design of my landing page in projects/frontend/src/Home.tsx. Please redesign the layout using modern web design principles with TailwindCSS. Include:
-- A visually striking hero section with a short headline and subheading
-- A primary call-to-action button that navigates to key features
-- A simple feature grid that highlights the cards: Counter, Bank, Payments, Create Token (ASA), Mint NFT
-- Balanced spacing, responsive design (mobile/desktop), and a Web3/tech-style color theme
-Keep ALL existing logic for wallet connection, navigation, event handlers, and button states EXACTLY as they are — do not change any logic or data flow. Only change the JSX structure and Tailwind classes.
-```
-
-### 4.2 Payments (Transact)
-
-File: `projects/frontend/src/components/Transact.tsx`
-
-Prompt:
-```
-I'm building a payments dApp on Algorand that allows users to send ALGO or USDC to others. I’ve pasted the existing projects/frontend/src/components/Transact.tsx which already contains transaction logic. Please redesign this component using TailwindCSS to look like a clean, modern payment interface:
-- Clear inputs for recipient address and read-only display for amount (1 ALGO in this example)
-- A prominent Send button
-- Helpful labels, subtle validation states, and a simple success message area
-- Responsive, minimal Web3 design aesthetic
-Keep ALL wallet and transaction logic EXACTLY as it is — do not change any function names, props, state variables, or event handlers.
-```
-
-Optional extension prompt (ASA like USDC):
-```
-Extend the UI design to optionally switch between sending ALGO or an ASA (e.g., USDC) without changing existing ALGO logic. Only provide additional JSX blocks and Tailwind classes; do not modify or remove the current payment logic. You can add a new tab-like UI and mock disabled form fields for ASA to show the final look-and-feel.
-```
-
-### 4.3 Bank (Complex contract + Indexer)
-
-File: `projects/frontend/src/components/Bank.tsx`
-
-Prompt:
-```
-This is a "Bank" demo that shows a more complex Algorand contract integration with Indexer queries, boxes, and inner transactions. I’ve pasted projects/frontend/src/components/Bank.tsx. Please enhance the UI with TailwindCSS:
-- Clear App ID input and App Address display
-- Two panels: Deposit (memo + amount) and Withdraw (amount)
-- A status area for loading/spinners and action feedback
-- Paginated, scrollable Statements and Depositors lists, with clear labels and link to explorer
-- Keep it responsive and professional with a dashboard feel
-Do NOT change any logic, props, function names, or data fetching. Only adjust JSX structure and Tailwind classes.
-```
-
-### 4.4 Create ASA (Fungible tokens)
-
-File: `projects/frontend/src/components/CreateASA.tsx`
-
-Prompt:
-```
-I'm building a loyalty/stablecoin-like token on Algorand. I’ve included projects/frontend/src/components/CreateASA.tsx with working ASA creation logic. Please redesign the component using TailwindCSS to present a professional token creation form:
-- Inputs: Token Name, Unit/Symbol, Decimals, Total Supply (base units)
-- A clear, primary "Create Token" button with loading/disabled states
-- A compact help text about each field
-- Minimal dashboard style consistent with the rest of the app
-Keep ALL minting and wallet logic EXACTLY as-is — change ONLY layout and Tailwind classes.
-```
-
-### 4.5 Mint NFT (IPFS + ARC NFT)
-
-File: `projects/frontend/src/components/MintNFT.tsx`
-
-Prompt:
-```
-I'm building an Algorand-based NFT dApp that allows users to mint digital collectibles. I’ve pasted projects/frontend/src/components/MintNFT.tsx which already includes upload to IPFS and NFT mint logic. Please redesign using TailwindCSS:
-- Upload field for image/file with preview
-- Inputs for Name and Description
-- Display upload and mint progress (spinners, progress bars, small status messages)
-- A primary "Mint NFT" button with clear disabled/loading states
-- A link to view the NFT/metadata via the configured IPFS gateway
-Keep ALL wallet, IPFS (Pinata), and minting logic EXACTLY as-is — modify only JSX and Tailwind classes.
+```toml
+[algokit]
+min_version = "2.0.0"
 ```
 
 ---
 
-## 5) NFT Environment (Pinata + IPFS)
+## Running the Application
 
-- Create Pinata API Key/JWT: `https://app.pinata.cloud/developers/api-keys`
-- Put JWT in `projects/frontend/.env` as `VITE_PINATA_JWT`
-- Optional: set `VITE_PINATA_GATEWAY` to your preferred gateway
-- Restart dev server after changing `.env`:
+### Start the Algorand LocalNet (Optional for Testing)
 
 ```bash
+algokit localnet start
+```
+
+### Start the Frontend Development Server
+
+```bash
+cd projects/frontend
 npm run dev
 ```
 
-NFT flow uses:
-- `src/utils/pinata.ts` (expects `VITE_PINATA_JWT`, optional `VITE_PINATA_GATEWAY`)
-- `pinFileToIPFS` and `pinJSONToIPFS` endpoints
+The app will be available at `http://localhost:5173`.
 
----
+### Build for Production
 
-## 6) Smart Contract interaction basics
-
-- Example TS clients are generated into `projects/frontend/src/contracts`
-- Frontend demo wiring in `src/components/AppCalls.tsx`
-- Use Bank/Counter cards to explore app call patterns, boxes, and Indexer usage
-
-Learn more:
-- Algorand Dev Portal: `https://dev.algorand.co/`
-- AlgoKit Workshops: `https://algorand.co/algokit-workshops`
-- Algodevs YouTube: `https://www.youtube.com/@algodevs`
-
----
-
-## 7) Card overview and tweak ideas
-
-- Counter
-  - Purpose: Simple app call demonstration
-  - Tweak: Typography, spacing, and success toast placement
-  - AI tip: “Add a hero-like header; keep all state/handlers/contract calls unchanged.”
-
-- Bank
-  - Purpose: Complex contract with deposit/withdraw and Indexer reads
-  - Tweak: Two-column layout, data tables with pagination, explorer links
-  - AI tip: “Make statements/depositors scrollable; maintain all function names and handlers.”
-
-- Payments (Transact)
-  - Purpose: Send ALGO (and optionally mock ASA UI)
-  - Tweak: Input clarity, action emphasis, subtle validation messaging
-  - AI tip: “Keep existing ALGO logic identical; ASA tab as UI-only demo.”
-
-- Create ASA
-  - Purpose: Mint fungible token
-  - Tweak: Professional form design, helper text for decimals/total
-  - AI tip: “Do not change the `algorand.send.assetCreate` call; style form and loading states.”
-
-- Mint NFT
-  - Purpose: Upload media/metadata to IPFS, mint an ARC NFT
-  - Tweak: File upload preview, progress messages, gateway links
-  - AI tip: “Keep Pinata calls and NFT mint logic intact; enhance UI and progress indicators.”
-
----
-
-## 8) Troubleshooting
-
-- “Missing VITE_ALGOD_SERVER”
-  - Ensure `.env` exists in `projects/frontend` and values are set
-  - Restart `npm run dev`
-
-- “Missing VITE_PINATA_JWT” or IPFS upload fails
-  - Generate JWT in Pinata dashboard and add to `.env`
-  - Confirm gateway works or remove custom gateway (defaults to `https://ipfs.io/ipfs`)
-
-- Indexer queries return empty
-  - Verify `VITE_INDEXER_SERVER` is a TestNet Indexer and `VITE_ALGOD_NETWORK=testnet`
-  - Confirm correct App ID in Bank card
-
-- Transactions fail
-  - Ensure wallet is connected and funded
-  - For Bank, input a valid App ID or deploy via the card
-
----
-
-## 9) CI/CD (Optional)
-
-- Integrate with GitHub Actions for lint/type/test and deployments.
-- Deploy smart contracts via `algokit deploy`.
-- Deploy frontend to Vercel/Netlify; add these `.env` variables to hosting settings.
-
----
-
-## 10) Copy‑ready AI Prompt Snippets
-
-Use these verbatim as you work card‑by‑card:
-
-- Home:
-```
-Redesign projects/frontend/src/Home.tsx using TailwindCSS for a modern Web3 landing page with a strong hero, concise subtitle, and a grid of feature cards (Counter, Bank, Payments, Create Token, Mint NFT). Keep all wallet/navigation logic, props, and handlers EXACTLY as-is. Modify only JSX and Tailwind classes.
+```bash
+npm run build
+npm run preview
 ```
 
-- Transact:
-```
-Redesign projects/frontend/src/components/Transact.tsx into a clean payments UI (recipient input, 1 ALGO send button, success message area). Keep ALL existing logic and handlers unchanged. Modify only JSX/Tailwind. Optionally add an ASA tab UI mock without changing logic.
-```
+### Lint & Format Code
 
-- Bank:
-```
-Enhance projects/frontend/src/components/Bank.tsx with a dashboard feel: App ID input, deploy section, deposit/withdraw cards, scrollable statements and depositors lists with explorer links. Maintain ALL logic and calls as-is; only update layout and Tailwind classes.
-```
-
-- Create ASA:
-```
-Redesign projects/frontend/src/components/CreateASA.tsx to a professional token creation form with inputs (Name, Unit, Decimals, Total), helper text, and a prominent Create button with loading state. Keep all ASA creation logic intact; change only JSX/Tailwind.
-```
-
-- Mint NFT:
-```
-Redesign projects/frontend/src/components/MintNFT.tsx for a sleek NFT minter: file upload with preview, name/description fields, visible Mint button, and progress indicators. Keep Pinata, IPFS, and mint logic untouched; only adjust JSX/Tailwind.
+```bash
+npm run lint
+npm run lint:fix
 ```
 
 ---
 
-Links cited:
-- Base template repo: [marotipatre/Hackseries-2-QuickStart-template](https://github.com/marotipatre/Hackseries-2-QuickStart-template)
-- Algorand Developer Portal: `https://dev.algorand.co/`
-- AlgoKit Workshops: `https://algorand.co/algokit-workshops`
-- Algodevs YouTube: `https://www.youtube.com/@algodevs`
-- Pinata API Keys: `https://app.pinata.cloud/developers/api-keys`
+## Smart Contracts
 
+### Deploying Contracts
 
+```bash
+cd projects/contracts
+algokit deploy localnet  # or testnet, mainnet
+```
+
+### Contract Files
+
+- **Counter**: Simple state increment/decrement
+  - Location: `smart_contracts/counter/contract.py`
+  - Client SDK: `artifacts/counter/counter_client.py`
+
+- **Bank**: Multi-user savings example
+  - Location: `smart_contracts/bank/contract.py`
+  - Client SDK: `artifacts/bank/bank_client.py`
+
+### Running Tests
+
+```bash
+pytest tests/
+```
+
+---
+
+## API Integration
+
+### Gemini API (Code Grading)
+
+The `gradeExam()` function in `utils/gradeExam.ts`:
+
+1. Sends student code and exam question to Gemini
+2. Receives JSON response: `{ passed: boolean, score: number, feedback: string }`
+3. Falls back to simulated grade if API quota exceeded
+
+**Model Support**:
+- `gemini-1.5` (default, free tier)
+- `gemini-2.0-flash` (faster, recommended)
+
+### Pinata API (IPFS Storage)
+
+The `pinata.ts` module:
+
+- `pinFileToIPFS()`: Upload certificate image
+- `pinJSONToIPFS()`: Upload ARC-3 metadata
+- `uploadToIPFS()`: Generic file upload wrapper
+
+**Response Format**:
+```json
+{
+  "IpfsHash": "QmXxxx...",
+  "PinSize": 12345,
+  "Timestamp": "2024-02-12T..."
+}
+```
+
+---
+
+## Security & Anti-Cheat
+
+### Active Monitoring
+
+| Event | Detection | Response |
+|-------|-----------|----------|
+| **Tab Switch** | `visibilitychange` | Pause exam, record violation |
+| **Fullscreen Exit** | `fullscreenchange` | Pause exam, record violation |
+| **Alt-Tab / Window Loss** | `blur` event | Warn, deduct trust score |
+| **External Paste** | Clipboard API (capture phase) | Block paste, record as external |
+| **Copy/Cut (Internal)** | `copy`/`cut` on editor | Mark as potential internal paste |
+| **Bot Typing Speed** | WPM > 180 | Penalize trust score |
+| **Large Bulk Insert** | >10 chars inserted at once | Treat as paste |
+
+### Trust Score Calculation
+
+```
+Base: 100%
+- Tab Switch: -15%
+- Window Focus Loss: -10%
+- External Paste: -20%
+- Bot Speed (>180 WPM): -50%
+- Large Paste (avg >50 chars): -20%
+```
+
+### Violation Log
+
+All violations are timestamped and stored in component state, visible in the UI metrics panel.
+
+---
+
+## Certificate Generation & Minting
+
+### Step 1: Code Grading
+- Student submits Python code
+- Gemini API evaluates against test cases
+- Score and feedback returned
+
+### Step 2: Certificate Rendering
+If `passed: true`, **generateCertificate()** is called:
+- Creates high-resolution Canvas (1200x800px)
+- Renders ornate certificate design
+- Embeds: student name, score, date, trust metrics
+- Outputs: Preview URL + File object for upload
+
+### Step 3: IPFS Upload
+- Certificate image pinned to IPFS via Pinata
+- ARC-3 metadata object created:
+  ```json
+  {
+    "name": "Python 101 Certificate",
+    "description": "Issued to [Student] for score [Score]",
+    "image": "ipfs://QmXxxx",
+    "properties": {
+      "score": 92,
+      "trust_score": 95,
+      "exam": "Python 101",
+      "issuer": "Algo-Cert Academy"
+    }
+  }
+  ```
+- Metadata pinned to IPFS
+
+### Step 4: NFT Minting
+- **Asset Creation** via `algorand.send.assetCreate()`:
+  - Total supply: 1 (non-fungible)
+  - Decimals: 0
+  - Unit name: `CERT`
+  - Asset name: `PY101-CERT`
+  - URL: `ipfs://QmXxxx#arc3` (points to metadata)
+  - Manager: Student's wallet address
+- Transaction signed by student via wallet
+- ASA created and transferred to student's wallet
+- Certificate is now immutable, verifiable, and portable
+
+---
+
+## Environment Variables Reference
+
+### Required (No Defaults)
+- `VITE_GEMINI_API_KEY`: Google Gemini API key
+- `VITE_PINATA_JWT`: Pinata authentication JWT
+
+### Optional (With Defaults)
+- `VITE_GEMINI_MODEL`: AI model name (default: `gemini-1.5`)
+- `VITE_STUDENT_NAME`: Certificate recipient name (default: derived from wallet address)
+- `VITE_NETWORK`: Blockchain network (default: `testnet`)
+
+### Algorand RPC (Defaults to AlgoNode)
+- `VITE_ALGOD_SERVER`: Algorand node server
+- `VITE_ALGOD_PORT`: Algorand node port (usually 443)
+- `VITE_INDEXER_SERVER`: Indexer server
+- `VITE_INDEXER_PORT`: Indexer port (usually 443)
+
+---
+
+## Troubleshooting
+
+### Issue: "API Key not found"
+**Solution**: Ensure `.env` file exists in `projects/frontend/` and contains `VITE_GEMINI_API_KEY`.
+
+### Issue: Paste detection not working
+**Solution**: Verify browser allows clipboard API (HTTPS required in production). Check DevTools console for permission errors.
+
+### Issue: Fullscreen mode not toggling
+**Solution**: Some browsers restrict fullscreen. Try F11 or allow fullscreen permission. Check browser console for errors.
+
+### Issue: Wallet connection fails
+**Solution**: Ensure a compatible wallet (Pera, Defly) is installed and network matches configured RPC.
+
+### Issue: ASA minting fails
+**Solution**: Verify:
+- Student has sufficient ALGO (>0.2 for fees)
+- Wallet is connected and on correct network
+- Pinata upload succeeded (check returned CID)
+
+---
+
+## Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit changes with clear messages (`git commit -m "feat: description"`)
+4. Push to your fork (`git push origin feature/your-feature`)
+5. Submit a pull request with test results
+
+---
+
+## License
+
+This project is licensed under the **MIT License**. See [LICENSE](./LICENSE) for details.
+
+---
+
+## Support & Community
+
+- 📖 **Documentation**: See `Alokit_setup.md` for detailed setup
+- 🐛 **Issues**: Report bugs on GitHub Issues
+- 💬 **Discussions**: Join community discussions
+- 📧 **Email**: vaibhavspatre@gmail.com
+
+---
+
+## Acknowledgments
+
+- **AlgoKit** team for smart contract scaffolding
+- **Algorand Foundation** for the blockchain infrastructure
+- **Pinata** for IPFS hosting
+- **Google** for Gemini API
+- **Monaco** for the editor component
+
+---
+
+**Built with ❤️ for the Algorand ecosystem**
+
+*Last Updated: February 2026*
