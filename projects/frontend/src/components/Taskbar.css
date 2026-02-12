@@ -1,0 +1,125 @@
+/* Position the dock at the bottom center */
+.taskbar-container {
+    position: fixed;
+    top: 40px;
+    left: 80%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* The Main Bar (The Shape Shifter) */
+.taskbar {
+    background: rgba(0, 0, 0, 0.9); /* Zinc-900 with opacity */
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(82, 82, 91, 0.5); /* Zinc-600 */
+    border-radius: 9999px; /* Full pill shape */
+    
+    /* INITIAL STATE: Collapsed Line */
+    width: 120px;
+    height: 20px;
+    
+    /* THE ANIMATION MAGIC */
+    /* This bezier curve gives it a "snap" effect like Framer Motion */
+    transition: 
+        width 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+        height 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+        border-radius 0.5s ease;
+    
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* HOVER STATE: Expanded Menu */
+.taskbar:hover {
+    width: 20vw;      /* Expand width */
+    height: 50px;     /* Expand height */
+    min-width: 300px; /* Safety for mobile screens */
+    border-radius: 16px; /* Slightly less rounded when open */
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* === INTERNAL ELEMENTS === */
+
+/* The Arrow Indicator (Visible when collapsed) */
+.taskbar-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+/* Hide arrow on hover */
+.taskbar:hover .taskbar-indicator {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The Arrow Icon itself */
+.arrow-icon {
+    width: 12px;
+    height: 12px;
+    border-right: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(45deg) translateY(-2px); /* Points down/right */
+    opacity: 0.7;
+}
+
+/* The Menu Content (Hidden when collapsed) */
+.taskbar-menu {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 20px;
+    
+    /* Hide by default */
+    opacity: 0;
+    transform: translateY(10px); /* Slide up effect */
+    transition: 
+        opacity 0.3s ease 0.1s, /* 0.1s delay so box opens first */
+        transform 0.3s ease 0.1s;
+    pointer-events: none;
+}
+
+/* Show menu on hover */
+.taskbar:hover .taskbar-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Links */
+.taskbar-link {
+    color: #a1a1aa; /* Zinc-400 */
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    white-space: nowrap;
+}
+
+.taskbar-link:hover {
+    color: #fff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.5);
+}
+
+/* Divider Line */
+.taskbar-divider {
+    width: 1px;
+    height: 16px;
+    background-color: #52525b; /* Zinc-600 */
+}
