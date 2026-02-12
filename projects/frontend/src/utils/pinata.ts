@@ -1,45 +1,55 @@
-export interface PinataFileResult {
-  IpfsHash: string
-}
+import axios from 'axios';
 
-export interface PinataJsonResult {
-  IpfsHash: string
-}
+const PINATA_JWT = import.meta.env.VITE_PINATA_JWT;
 
-export async function pinFileToIPFS(file: File): Promise<PinataFileResult> {
-  const jwt = import.meta.env.VITE_PINATA_JWT
-  if (!jwt) throw new Error('Missing VITE_PINATA_JWT')
+export const uploadToIPFS = async (file: File | Blob, name: string): Promise<string> => {
+    if (!PINATA_JWT) throw new Error("Missing VITE_PINATA_JWT in .env");
 
-  const form = new FormData()
-  form.append('file', file)
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const metadata = JSON.stringify({ name: name });
+    formData.append('pinataMetadata', metadata);
 
-  const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${jwt}` },
-    body: form,
-  })
-  if (!res.ok) throw new Error(`Pinata file upload failed (${res.status})`)
-  return (await res.json()) as PinataFileResult
-}
+    const options = JSON.stringify({ cidVersion: 1 });
+    formData.append('pinataOptions', options);
 
-export async function pinJSONToIPFS(json: unknown): Promise<PinataJsonResult> {
-  const jwt = import.meta.env.VITE_PINATA_JWT
-  if (!jwt) throw new Error('Missing VITE_PINATA_JWT')
+    const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
+        maxBodyLength: Infinity,
+        headers: {
+            'Authorization': `Bearer ${PINATA_JWT}`
+        }
+    });
 
-  const res = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(json),
-  })
-  if (!res.ok) throw new Error(`Pinata JSON upload failed (${res.status})`)
-  return (await res.json()) as PinataJsonResult
-}
+    return `ipfs://${res.data.IpfsHash}`;
+};
 
-export function ipfsHttpUrl(cid: string): string {
-  const gateway = import.meta.env.VITE_PINATA_GATEWAY || 'https://ipfs.io/ipfs'
-  return `${gateway}/${cid}`
-}
+export const uploadJSONToIPFS = async (jsonData: object, name: string): Promise<string> => {
+    if (!PINATA_JWT) throw new Error("Missing VITE_PINATA_JWT in .env");
 
+    const data = JSON.stringify({
+        pinataOptions: { cidVersion: 1 },
+        pinataMetadata: { name: name },
+        pinataContent: jsonData
+    });
+
+    const res = await axios.post("https://api.pinata.cloud/pinning/pinJSONToIPFS", data, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${PINATA_JWT}`
+        }
+    });
+
+    return `ipfs://${res.data.IpfsHash}`;
+};
+
+// Helper: Convert Base64 to Blob for uploading
+export const base64ToBlob = (base64: string): Blob => {
+    const byteString = atob(base64.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: 'image/png' });
+};
