@@ -402,7 +402,7 @@ The `gradeExam()` function in `utils/gradeExam.ts`:
 
 **Model Support**:
 - `gemini-1.5` (default, free tier)
-- `gemini-2.0-flash` (faster, recommended)
+- `gemini-3-flash-preview` (faster, recommended)
 
 ### Pinata API (IPFS Storage)
 
